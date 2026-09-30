@@ -1,5 +1,7 @@
 # Engagement UI Kit — Starter Project
 
+> **Submission:** start with [SUBMISSION.md](SUBMISSION.md), then [DECISIONS.md](DECISIONS.md) and [ADOPTION.md](ADOPTION.md). `npm test -- --watch=false` runs the tests; `npm run check:contrast` checks every theme's token pairs against WCAG.
+
 An Angular starter for the design system exercise: a small UI kit, the token layer it is built
 on, one supplied component, and a workbench application that consumes the kit. Your exercise
 brief describes what to build.
