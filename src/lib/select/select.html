@@ -1,0 +1,42 @@
+<span class="label" [id]="id + '-label'">{{ label() }}</span>
+<div
+  #trigger
+  class="trigger"
+  role="combobox"
+  tabindex="0"
+  aria-haspopup="listbox"
+  [attr.aria-labelledby]="id + '-label'"
+  [attr.aria-controls]="id + '-listbox'"
+  [attr.aria-expanded]="expanded()"
+  [attr.aria-activedescendant]="activeId()"
+  (keydown)="onKeydown($event)"
+  (click)="onTriggerClick()"
+  (blur)="onBlur()"
+>
+  {{ selected()?.label ?? placeholder() }}
+</div>
+<ul
+  #listbox
+  class="listbox"
+  role="listbox"
+  popover="manual"
+  tabindex="-1"
+  [id]="id + '-listbox'"
+  [attr.aria-labelledby]="id + '-label'"
+  (mousedown)="$event.preventDefault()"
+>
+  @if (expanded()) {
+    @for (option of options(); track $index) {
+      <li
+        class="option"
+        role="option"
+        [id]="optionId($index)"
+        [attr.aria-selected]="option === selected()"
+        [attr.aria-disabled]="option.disabled ? 'true' : null"
+        (click)="onOptionClick($index)"
+      >
+        {{ option.label }}
+      </li>
+    }
+  }
+</ul>

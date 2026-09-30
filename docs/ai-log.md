@@ -30,3 +30,7 @@ Running log of what the AI assistant (Claude, in Claude Code) proposed, what I c
 - **The script caught an AI mistake:** the AI's first dark-theme danger text (`red-400` on `gray-800`) was 4.34:1, below 4.5. Changed to `red-100` (9.12:1); `red-400` kept for the non-text danger border (3:1 rule).
 - It also surfaced a failure in the supplied palette itself: the light warning dot (`amber-600` on `amber-50`) is 2.88:1, so indicators use the `-700` shades.
 - Added primitives `green-400`, `amber-400`, `red-400` for dark-mode indicators, each justified by a measured pairing.
+
+## 2026-09-30: correction before implementing (ADR 0009)
+
+- The AI's own round-1 keyboard table said arrow keys skip disabled options, and I had accepted it. Before writing the navigation tests, the AI flagged it as wrong: with `aria-activedescendant` only the active option is announced, so skipped options would be invisible to screen reader users, which conflicts with the brief's "conveyed as unavailable". I chose reachable-but-not-choosable.
