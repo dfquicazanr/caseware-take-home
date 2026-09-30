@@ -48,11 +48,6 @@
   &[aria-invalid='true'] {
     border-color: var(--cw-color-border-danger);
   }
-
-  &[aria-disabled='true'] {
-    color: var(--cw-color-text-disabled);
-    cursor: not-allowed;
-  }
 }
 
 .listbox {
@@ -94,6 +89,15 @@
     flex: 0 0 1em;
   }
 
+  // Unavailable: dimmed and italic, so it stays recognisable when highlighted.
+  &[aria-disabled='true'] {
+    color: var(--cw-color-text-disabled);
+    cursor: not-allowed;
+    font-style: italic;
+  }
+
+  // After the disabled rule on purpose: the active option must always read at
+  // full highlight contrast, even when it is unavailable.
   &.active {
     background: var(--cw-color-highlight-bg);
     color: var(--cw-color-highlight-text);
@@ -106,11 +110,6 @@
     &::before {
       content: '✓' / '';
     }
-  }
-
-  &[aria-disabled='true'] {
-    color: var(--cw-color-text-disabled);
-    cursor: not-allowed;
   }
 }
 

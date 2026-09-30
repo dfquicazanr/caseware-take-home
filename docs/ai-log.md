@@ -48,3 +48,9 @@ Running log of what the AI assistant (Claude, in Claude Code) proposed, what I c
 - **Design detail found while testing:** "warn once" must be per application, not per badge. A module-level Set would leak across tests and across apps sharing a bundle, so it lives in a root-provided service.
 - Two test bugs caught before trusting a green run: a static `label` attribute in the legacy test host made the DOM comparison unfair, and un-restored console spies accumulated calls across tests.
 - **Verified live in Chrome:** accessible text "Processing, The server is still preparing this engagement", hover title kept, engagement rows show the right tones, one warning per page load.
+
+## 2026-09-30: live browser pass (Claude in Chrome, scripted against the running workbench)
+
+- 9/9 interaction checks passed: label click focuses; click opens; clicking an unavailable option does nothing; clicking an option chooses it and keeps focus; outside click and Tab close without changing the value; an unavailable current value is shown and valid; an unknown value is an announced error; a disabled control is unfocusable and will not open.
+- **Bug found only by measuring the rendered page:** when the active option was also unavailable, the disabled colour overrode the highlight colour through CSS source order, dropping contrast to 2.6:1 in high contrast and 4.0:1 in light. Neither the unit tests (jsdom has no colour) nor the token contrast script (tokens were fine; the cascade was not) could see it. Fixed by ordering the active rule last and adding italic as a non-colour cue for unavailable options; re-measured at 15.1 / 11.0 / 16.6.
+- One of the AI's own measurement scripts was wrong (it read an element's style after it had stopped being active); caught because the number did not match the colours, and re-measured correctly.
