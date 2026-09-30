@@ -18,3 +18,8 @@ Running log of what the AI assistant (Claude, in Claude Code) proposed, what I c
 - **Tooltip: overrode the AI.** AI proposed removing it. I pointed out it carries information the label does not (the Processing specimen's explanation), so removing it removes functionality. Kept, and exposed to assistive technology; a real tooltip is next steps.
 - **Breaking change strategy: overrode the AI (ADR 0006).** AI proposed a clean major break. I chose deprecation shims, based on experience that teams upgrade for security patches without reading changelogs. Consequence: ships as a minor version.
 - **Tokens, theme attribute, added primitives, light high-contrast theme, workbench on semantic tokens (ADR 0007):** accepted as proposed.
+
+## 2026-09-30: design decisions (round 3: cw-select edge cases, test seams)
+
+- **Unknown value: overrode the AI (ADR 0008).** AI proposed leaving the form value alone and showing the placeholder. I required that the form be told: the component now registers as a validator and shows a linked error message.
+- Placeholder, no clear action, `===` comparison (compareWith documented as future work), showing an unavailable current value, build order, and test seams: accepted as proposed. Contrast will be checked by a script across all three themes.
