@@ -1,10 +1,179 @@
 /**
  * Semantic tokens: what the primitives are *for*.
  *
- * This layer is yours. It is the seam between the raw palette in
- * `_primitives.scss` and the components that consume it, and it is what makes
- * a second theme possible without touching component styles.
+ * Kit components consume only these, never a primitive. A theme is a
+ * `data-cw-theme` attribute on `<html>` or any element, and it redefines
+ * tokens from this file only, so no theme ever touches component styles.
+ * Only roles a component actually uses are defined here: every name is a
+ * public contract with consumer teams (ADR 0007).
  *
- * Nothing here is prescribed: the roles you define, how you name them, and how
- * a theme overrides them are part of what the exercise is asking you to design.
+ * Contrast of every text/surface pair is checked by `npm run check:contrast`.
  */
+
+/* Default (light) theme. Also selectable explicitly, so a light subtree can
+   sit inside a dark page. */
+:root,
+[data-cw-theme='light'] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --cw-color-surface: var(--cw-gray-0);
+  --cw-color-surface-subtle: var(--cw-gray-50);
+  --cw-color-surface-raised: var(--cw-gray-0);
+
+  /* Text */
+  --cw-color-text: var(--cw-gray-900);
+  --cw-color-text-muted: var(--cw-gray-600);
+  --cw-color-text-disabled: var(--cw-gray-500);
+  --cw-color-text-danger: var(--cw-red-700);
+
+  /* Borders: `border` is decorative; `border-control` outlines an interactive
+     control and must reach 3:1 against its surface (WCAG 1.4.11). */
+  --cw-color-border: var(--cw-gray-200);
+  --cw-color-border-control: var(--cw-gray-500);
+  --cw-color-border-danger: var(--cw-red-700);
+
+  /* Interaction */
+  --cw-color-accent: var(--cw-blue-600);
+  --cw-color-focus-ring: var(--cw-blue-600);
+  --cw-color-highlight-bg: var(--cw-blue-50);
+  --cw-color-highlight-text: var(--cw-gray-900);
+
+  /* Status: fg is text, indicator is a non-text mark (3:1 against bg). */
+  --cw-color-status-neutral-bg: var(--cw-gray-50);
+  --cw-color-status-neutral-fg: var(--cw-gray-700);
+  --cw-color-status-neutral-border: var(--cw-gray-200);
+  --cw-color-status-neutral-indicator: var(--cw-gray-500);
+  --cw-color-status-success-bg: var(--cw-green-50);
+  --cw-color-status-success-fg: var(--cw-green-800);
+  --cw-color-status-success-border: var(--cw-green-100);
+  --cw-color-status-success-indicator: var(--cw-green-700);
+  --cw-color-status-warning-bg: var(--cw-amber-50);
+  --cw-color-status-warning-fg: var(--cw-amber-800);
+  --cw-color-status-warning-border: var(--cw-amber-100);
+  --cw-color-status-warning-indicator: var(--cw-amber-700);
+  --cw-color-status-danger-bg: var(--cw-red-50);
+  --cw-color-status-danger-fg: var(--cw-red-800);
+  --cw-color-status-danger-border: var(--cw-red-100);
+  --cw-color-status-danger-indicator: var(--cw-red-700);
+
+  /* Elevation */
+  --cw-shadow-popup: var(--cw-shadow-md);
+
+  /* Lines */
+  --cw-border-width: 1px;
+  --cw-border-width-control: 1px;
+  --cw-focus-ring-width: 2px;
+  --cw-focus-ring-offset: 2px;
+
+  /* Shape */
+  --cw-radius-control: var(--cw-radius-md);
+  --cw-radius-popup: var(--cw-radius-md);
+  --cw-radius-badge: var(--cw-radius-pill);
+
+  /* Spacing */
+  --cw-space-inset-xs: var(--cw-space-1);
+  --cw-space-inset-sm: var(--cw-space-2);
+  --cw-space-inset-md: var(--cw-space-3);
+  --cw-space-gap-xs: var(--cw-space-1);
+  --cw-space-gap-sm: var(--cw-space-2);
+
+  /* Typography */
+  --cw-font-family: var(--cw-font-sans);
+  --cw-font-size-body: var(--cw-font-size-md);
+  --cw-font-size-label: var(--cw-font-size-sm);
+  --cw-font-size-label-sm: var(--cw-font-size-xs);
+  --cw-font-weight-label: var(--cw-font-weight-medium);
+  --cw-font-weight-emphasis: var(--cw-font-weight-semibold);
+  --cw-line-height-body: var(--cw-line-height-normal);
+  --cw-line-height-compact: var(--cw-line-height-tight);
+}
+
+[data-cw-theme='dark'] {
+  color-scheme: dark;
+
+  --cw-color-surface: var(--cw-gray-900);
+  --cw-color-surface-subtle: var(--cw-gray-800);
+  --cw-color-surface-raised: var(--cw-gray-800);
+
+  --cw-color-text: var(--cw-gray-50);
+  --cw-color-text-muted: var(--cw-gray-300);
+  --cw-color-text-disabled: var(--cw-gray-400);
+  --cw-color-text-danger: var(--cw-red-100);
+
+  --cw-color-border: var(--cw-gray-700);
+  --cw-color-border-control: var(--cw-gray-400);
+  --cw-color-border-danger: var(--cw-red-400);
+
+  --cw-color-accent: var(--cw-blue-200);
+  --cw-color-focus-ring: var(--cw-blue-200);
+  --cw-color-highlight-bg: var(--cw-blue-800);
+  --cw-color-highlight-text: var(--cw-gray-50);
+
+  --cw-color-status-neutral-bg: var(--cw-gray-800);
+  --cw-color-status-neutral-fg: var(--cw-gray-100);
+  --cw-color-status-neutral-border: var(--cw-gray-700);
+  --cw-color-status-neutral-indicator: var(--cw-gray-400);
+  --cw-color-status-success-bg: var(--cw-green-800);
+  --cw-color-status-success-fg: var(--cw-green-100);
+  --cw-color-status-success-border: var(--cw-green-700);
+  --cw-color-status-success-indicator: var(--cw-green-400);
+  --cw-color-status-warning-bg: var(--cw-amber-800);
+  --cw-color-status-warning-fg: var(--cw-amber-100);
+  --cw-color-status-warning-border: var(--cw-amber-700);
+  --cw-color-status-warning-indicator: var(--cw-amber-400);
+  --cw-color-status-danger-bg: var(--cw-red-800);
+  --cw-color-status-danger-fg: var(--cw-red-100);
+  --cw-color-status-danger-border: var(--cw-red-700);
+  --cw-color-status-danger-indicator: var(--cw-red-400);
+
+  /* A shadow barely reads on a dark surface; the popup relies on its border. */
+  --cw-shadow-popup: none;
+}
+
+/* Light-based high contrast: near-black on white, heavier lines, and status
+   shown by text and outline rather than by tint. */
+[data-cw-theme='high-contrast'] {
+  color-scheme: light;
+
+  --cw-color-surface: var(--cw-gray-0);
+  --cw-color-surface-subtle: var(--cw-gray-0);
+  --cw-color-surface-raised: var(--cw-gray-0);
+
+  --cw-color-text: var(--cw-gray-900);
+  --cw-color-text-muted: var(--cw-gray-800);
+  --cw-color-text-disabled: var(--cw-gray-600);
+  --cw-color-text-danger: var(--cw-red-800);
+
+  --cw-color-border: var(--cw-gray-900);
+  --cw-color-border-control: var(--cw-gray-900);
+  --cw-color-border-danger: var(--cw-red-800);
+
+  --cw-color-accent: var(--cw-blue-800);
+  --cw-color-focus-ring: var(--cw-blue-800);
+  --cw-color-highlight-bg: var(--cw-gray-900);
+  --cw-color-highlight-text: var(--cw-gray-0);
+
+  --cw-color-status-neutral-bg: var(--cw-gray-0);
+  --cw-color-status-neutral-fg: var(--cw-gray-900);
+  --cw-color-status-neutral-border: var(--cw-gray-900);
+  --cw-color-status-neutral-indicator: var(--cw-gray-700);
+  --cw-color-status-success-bg: var(--cw-gray-0);
+  --cw-color-status-success-fg: var(--cw-gray-900);
+  --cw-color-status-success-border: var(--cw-green-800);
+  --cw-color-status-success-indicator: var(--cw-green-800);
+  --cw-color-status-warning-bg: var(--cw-gray-0);
+  --cw-color-status-warning-fg: var(--cw-gray-900);
+  --cw-color-status-warning-border: var(--cw-amber-800);
+  --cw-color-status-warning-indicator: var(--cw-amber-800);
+  --cw-color-status-danger-bg: var(--cw-gray-0);
+  --cw-color-status-danger-fg: var(--cw-gray-900);
+  --cw-color-status-danger-border: var(--cw-red-800);
+  --cw-color-status-danger-indicator: var(--cw-red-800);
+
+  --cw-shadow-popup: none;
+
+  --cw-border-width: 2px;
+  --cw-border-width-control: 2px;
+  --cw-focus-ring-width: 3px;
+}

@@ -4,3 +4,10 @@
 
 @use 'primitives';
 @use 'semantic';
+
+/* An element that sets a theme also paints it, so a themed subtree is legible
+   on its own, not only when the attribute sits on <html>. */
+[data-cw-theme] {
+  background-color: var(--cw-color-surface);
+  color: var(--cw-color-text);
+}

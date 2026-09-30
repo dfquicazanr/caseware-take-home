@@ -23,3 +23,10 @@ Running log of what the AI assistant (Claude, in Claude Code) proposed, what I c
 
 - **Unknown value: overrode the AI (ADR 0008).** AI proposed leaving the form value alone and showing the placeholder. I required that the form be told: the component now registers as a validator and shows a linked error message.
 - Placeholder, no clear action, `===` comparison (compareWith documented as future work), showing an unavailable current value, build order, and test seams: accepted as proposed. Contrast will be checked by a script across all three themes.
+
+## 2026-09-30: step 1, token layer
+
+- AI drafted the semantic layer and three themes, and wrote `scripts/check-contrast.mjs`, which resolves every token from the SCSS sources and checks 23 foreground/background pairs per theme.
+- **The script caught an AI mistake:** the AI's first dark-theme danger text (`red-400` on `gray-800`) was 4.34:1, below 4.5. Changed to `red-100` (9.12:1); `red-400` kept for the non-text danger border (3:1 rule).
+- It also surfaced a failure in the supplied palette itself: the light warning dot (`amber-600` on `amber-50`) is 2.88:1, so indicators use the `-700` shades.
+- Added primitives `green-400`, `amber-400`, `red-400` for dark-mode indicators, each justified by a measured pairing.
