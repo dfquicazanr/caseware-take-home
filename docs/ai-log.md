@@ -41,3 +41,10 @@ Running log of what the AI assistant (Claude, in Claude Code) proposed, what I c
 - **Test-design corrections found during the loop:** jsdom has no `CSS.escape`, `scrollIntoView` or Popover API (guarded, and tests assert state and ARIA instead). Vitest fake timers stall Angular's `whenStable()`, so typeahead expiry uses keystroke timestamps (`Date.now()`) rather than a timer, and the test fakes only `Date`. This also removed a timer from the component.
 - **Verified in a real browser (Chrome 153), by script against the live page:** the popover opens in the top layer, anchored under the trigger; the active option can be the disabled "Chen Wei" and Enter does nothing on it; Escape closes without changing value or dirtiness; "aid" lands on Aidan; theme switching reaches page and components; End on 500 options scrolls the active option into view.
 - **Still to verify by hand (me):** keyboard-only pass, and a screen reader pass (NVDA/Orca) on what is actually announced.
+
+## 2026-09-30: step 3, cw-status-badge
+
+- Built test-first: accessible text (label and tooltip reach assistive technology), each deprecated input renders identically to its replacement (compared on the rendered DOM), and one dev-mode warning per input per app.
+- **Design detail found while testing:** "warn once" must be per application, not per badge. A module-level Set would leak across tests and across apps sharing a bundle, so it lives in a root-provided service.
+- Two test bugs caught before trusting a green run: a static `label` attribute in the legacy test host made the DOM comparison unfair, and un-restored console spies accumulated calls across tests.
+- **Verified live in Chrome:** accessible text "Processing, The server is still preparing this engagement", hover title kept, engagement rows show the right tones, one warning per page load.

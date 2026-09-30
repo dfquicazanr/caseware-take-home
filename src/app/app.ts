@@ -3,8 +3,13 @@ import { Component, DOCUMENT, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
-import { Select, SelectOption, StatusBadge } from '../lib/public-api';
-import { CHANGE_GROUPS, ENGAGEMENTS, REVIEWERS } from './data/engagement-fixtures';
+import { Select, SelectOption, StatusBadge, StatusBadgeTone } from '../lib/public-api';
+import {
+  CHANGE_GROUPS,
+  ENGAGEMENTS,
+  EngagementStatus,
+  REVIEWERS,
+} from './data/engagement-fixtures';
 
 type Theme = 'light' | 'dark' | 'high-contrast';
 
@@ -24,6 +29,16 @@ export class App {
   protected readonly engagements = ENGAGEMENTS;
   protected readonly reviewers = REVIEWERS;
   protected readonly changeGroups = CHANGE_GROUPS;
+
+  /** Domain status to kit tone and human label: the consumer's job, not the kit's (ADR 0006). */
+  protected readonly statusBadges: Record<
+    EngagementStatus,
+    { tone: StatusBadgeTone; label: string }
+  > = {
+    READY: { tone: 'success', label: 'Ready' },
+    PROCESSING: { tone: 'warning', label: 'Processing' },
+    ERROR: { tone: 'danger', label: 'Error' },
+  };
 
   /** A form control for the reviewer filter, ready for a form-integrated control. */
   protected readonly reviewerId = new FormControl<string | null>(null);

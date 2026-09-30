@@ -1,4 +1,5 @@
-<div [class]="cssClass" [title]="tooltip">
-  <div class="dot"></div>
-  <div class="text" aria-hidden="true">{{ label }}</div>
-</div>
+<span class="indicator" aria-hidden="true"></span>
+<span class="label">{{ label() }}</span>
+@if (tooltip()) {
+  <span class="visually-hidden">, {{ tooltip() }}</span>
+}

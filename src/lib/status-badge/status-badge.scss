@@ -1,56 +1,66 @@
+// cw-status-badge consumes semantic tokens only (ADR 0007). Tone and size are
+// host attributes, so no !important and nothing reaches outside the component.
+
 :host {
-  display: inline-block;
-}
+  --_bg: var(--cw-color-status-neutral-bg);
+  --_fg: var(--cw-color-status-neutral-fg);
+  --_border: var(--cw-color-status-neutral-border);
+  --_indicator: var(--cw-color-status-neutral-indicator);
 
-.badge {
   align-items: center;
-  background: #f6f8fa;
-  border: 1px solid #d8dee6;
-  border-radius: 10px;
-  color: #9aa5b1;
+  background: var(--_bg);
+  border: var(--cw-border-width) solid var(--_border);
+  border-radius: var(--cw-radius-badge);
+  color: var(--_fg);
   display: inline-flex;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    Arial,
-    sans-serif;
-  font-size: 12px;
-  gap: 6px;
-  padding: 2px 8px;
+  font-family: var(--cw-font-family);
+  font-size: var(--cw-font-size-label);
+  gap: var(--cw-space-gap-xs);
+  line-height: var(--cw-line-height-compact);
+  padding: 0.125em var(--cw-space-inset-sm);
+  white-space: nowrap;
 }
 
-.dot {
-  background: #9aa5b1;
+@each $tone in success, warning, danger {
+  :host([data-tone='#{$tone}']) {
+    --_bg: var(--cw-color-status-#{$tone}-bg);
+    --_fg: var(--cw-color-status-#{$tone}-fg);
+    --_border: var(--cw-color-status-#{$tone}-border);
+    --_indicator: var(--cw-color-status-#{$tone}-indicator);
+  }
+}
+
+:host([data-size='sm']) {
+  font-size: var(--cw-font-size-label-sm);
+  padding-inline: var(--cw-space-inset-xs);
+}
+
+:host([data-size='lg']) {
+  font-size: var(--cw-font-size-body);
+  padding: 0.25em var(--cw-space-inset-md);
+}
+
+// Sized in em so it scales with the badge's text.
+.indicator {
+  background: var(--_indicator);
   border-radius: 50%;
   flex: 0 0 auto;
-  height: 8px;
-  width: 8px;
+  height: 0.6em;
+  width: 0.6em;
 }
 
-.badge-ready .dot {
-  background: #1a7f37;
+.visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
-.badge-processing .dot {
-  background: #bf8700;
-}
-
-.badge-error .dot {
-  background: #cf222e;
-}
-
-.badge-sm {
-  font-size: 11px !important;
-  padding: 1px 6px !important;
-}
-
-.badge-lg {
-  font-size: 14px !important;
-  padding: 4px 12px !important;
-}
-
-::ng-deep .engagement-row .badge {
-  margin-left: 4px;
+// Forced colours drop backgrounds: keep the indicator visible as an outline.
+@media (forced-colors: active) {
+  .indicator {
+    outline: 1px solid CanvasText;
+  }
 }

@@ -6,4 +6,8 @@
  */
 
 export { Select, type SelectOption } from './select/select';
-export { StatusBadge } from './status-badge/status-badge';
+export {
+  StatusBadge,
+  type StatusBadgeSize,
+  type StatusBadgeTone,
+} from './status-badge/status-badge';
