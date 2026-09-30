@@ -4,13 +4,22 @@ import {
   ElementRef,
   afterRenderEffect,
   computed,
+  effect,
   forwardRef,
   inject,
   input,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import {
+  AbstractControl,
+  ControlValueAccessor,
+  NG_VALIDATORS,
+  NG_VALUE_ACCESSOR,
+  ValidationErrors,
+  Validator,
+} from '@angular/forms';
 
 /** One choosable entry. Consumers map their own records into this shape (ADR 0002). */
 export interface SelectOption<T> {
@@ -21,6 +30,9 @@ export interface SelectOption<T> {
 }
 
 let nextId = 0;
+
+/** Keystrokes further apart than this start a new typeahead search. */
+const TYPEAHEAD_RESET_MS = 500;
 
 /**
  * Single-select combobox for the kit (APG select-only combobox, ADR 0001).
@@ -39,17 +51,25 @@ let nextId = 0;
   host: {
     '(document:pointerdown)': 'onDocumentPointerdown($event)',
   },
-  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => Select), multi: true }],
+  providers: [
+    { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => Select), multi: true },
+    { provide: NG_VALIDATORS, useExisting: forwardRef(() => Select), multi: true },
+  ],
 })
-export class Select<T> implements ControlValueAccessor {
+export class Select<T> implements ControlValueAccessor, Validator {
   /** Visible label; also the combobox's accessible name. */
   readonly label = input.required<string>();
   readonly options = input.required<readonly SelectOption<T>[]>();
   /** Shown while the value is null. */
   readonly placeholder = input('');
+  /** Shown and announced when the value matches no option (ADR 0008). */
+  readonly unknownValueMessage = input('The current value is not one of the available options.');
 
   protected readonly id = `cw-select-${nextId++}`;
+  /** Unique per instance so each listbox anchors to its own trigger (ADR 0005). */
+  protected readonly anchorName = `--${this.id}`;
   protected readonly value = signal<T | null>(null);
+  protected readonly disabled = signal(false);
   protected readonly expanded = signal(false);
   /** Index of the option conveyed via aria-activedescendant; -1 when closed. */
   protected readonly activeIndex = signal(-1);
@@ -59,15 +79,26 @@ export class Select<T> implements ControlValueAccessor {
     return value === null ? undefined : this.options().find((option) => option.value === value);
   });
 
+  /** A non-null value that no option carries: kept, but reported (ADR 0008). */
+  protected readonly unknownValue = computed(() => this.value() !== null && !this.selected());
+
   protected readonly activeId = computed(() =>
     this.expanded() && this.activeIndex() >= 0 ? this.optionId(this.activeIndex()) : null,
   );
+
+  private typeahead = { query: '', at: 0 };
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly trigger = viewChild.required<ElementRef<HTMLElement>>('trigger');
   private readonly listbox = viewChild.required<ElementRef<HTMLElement>>('listbox');
 
   constructor() {
+    // Options can change after the value was set; the form must re-validate.
+    effect(() => {
+      this.options();
+      untracked(() => this.onValidatorChange());
+    });
+
     // The listbox lives in the top layer (ADR 0005). jsdom has no Popover API,
     // hence the guards; state and ARIA never depend on it.
     afterRenderEffect(() => {
@@ -76,6 +107,15 @@ export class Select<T> implements ControlValueAccessor {
       if (open && !listbox.matches?.(':popover-open')) listbox.showPopover?.();
       if (!open && listbox.matches?.(':popover-open')) listbox.hidePopover?.();
     });
+
+    // Keep the active option visible in long lists. jsdom has no scrollIntoView.
+    afterRenderEffect(() => {
+      const id = this.activeId();
+      if (!id) return;
+      this.listbox()
+        .nativeElement.querySelector(`[id="${id}"]`)
+        ?.scrollIntoView?.({ block: 'nearest' });
+    });
   }
 
   protected optionId(index: number): string {
@@ -83,6 +123,7 @@ export class Select<T> implements ControlValueAccessor {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
+    if (this.disabled()) return;
     if (!this.expanded()) {
       this.onKeydownWhileClosed(event);
     } else {
@@ -90,7 +131,13 @@ export class Select<T> implements ControlValueAccessor {
     }
   }
 
+  /** Moves focus to the combobox, e.g. from its visible label. */
+  focus(): void {
+    this.trigger().nativeElement.focus();
+  }
+
   protected onTriggerClick(): void {
+    if (this.disabled()) return;
     this.trigger().nativeElement.focus();
     if (this.expanded()) {
       this.close();
@@ -116,6 +163,12 @@ export class Select<T> implements ControlValueAccessor {
   }
 
   private onKeydownWhileClosed(event: KeyboardEvent): void {
+    if (this.isTypeaheadKey(event)) {
+      event.preventDefault();
+      const match = this.findTypeaheadMatch(event.key);
+      this.open(match >= 0 ? match : undefined);
+      return;
+    }
     switch (event.key) {
       case 'ArrowDown':
       case 'ArrowUp':
@@ -136,6 +189,12 @@ export class Select<T> implements ControlValueAccessor {
   }
 
   private onKeydownWhileOpen(event: KeyboardEvent): void {
+    if (this.isTypeaheadKey(event)) {
+      event.preventDefault();
+      const match = this.findTypeaheadMatch(event.key);
+      if (match >= 0) this.activeIndex.set(match);
+      return;
+    }
     const last = this.options().length - 1;
     switch (event.key) {
       case 'ArrowDown':
@@ -170,6 +229,40 @@ export class Select<T> implements ControlValueAccessor {
     }
   }
 
+  /** Printable characters; Space only continues a query already in progress. */
+  private isTypeaheadKey(event: KeyboardEvent): boolean {
+    if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey) return false;
+    return event.key !== ' ' || this.typeaheadInProgress();
+  }
+
+  private typeaheadInProgress(): boolean {
+    return this.typeahead.query !== '' && Date.now() - this.typeahead.at <= TYPEAHEAD_RESET_MS;
+  }
+
+  /**
+   * Jumps, never filters (typeahead). Extends the query while keys arrive
+   * quickly, searches from the active option (wrapping), and a single letter
+   * repeated cycles through the options starting with it. Disabled options can
+   * match (ADR 0009). Returns -1 when nothing matches.
+   */
+  private findTypeaheadMatch(key: string): number {
+    const query =
+      (this.typeaheadInProgress() ? this.typeahead.query : '') + key.toLocaleLowerCase();
+    this.typeahead = { query, at: Date.now() };
+
+    const repeated = [...query].every((char) => char === query[0]);
+    const search = repeated ? query[0] : query;
+    const options = this.options();
+    const current = this.activeIndex();
+    // A fresh or cycling search starts after the current option; a longer query may still match it.
+    const start = current < 0 ? 0 : repeated || query.length === 1 ? current + 1 : current;
+    for (let offset = 0; offset < options.length; offset++) {
+      const index = (start + offset) % options.length;
+      if (options[index].label.toLocaleLowerCase().startsWith(search)) return index;
+    }
+    return -1;
+  }
+
   private open(activeIndex?: number): void {
     const options = this.options();
     const selectedIndex = options.findIndex((option) => option.value === this.value());
@@ -196,6 +289,7 @@ export class Select<T> implements ControlValueAccessor {
 
   private onChange: (value: T | null) => void = () => {};
   private onTouched: () => void = () => {};
+  private onValidatorChange: () => void = () => {};
 
   writeValue(value: T | null): void {
     this.value.set(value);
@@ -207,5 +301,20 @@ export class Select<T> implements ControlValueAccessor {
 
   registerOnTouched(fn: () => void): void {
     this.onTouched = fn;
+  }
+
+  setDisabledState(disabled: boolean): void {
+    this.disabled.set(disabled);
+    if (disabled) this.close();
+  }
+
+  validate(control: AbstractControl): ValidationErrors | null {
+    const value = control.value as T | null;
+    if (value === null || this.options().some((option) => option.value === value)) return null;
+    return { cwSelectUnknownValue: { value } };
+  }
+
+  registerOnValidatorChange(fn: () => void): void {
+    this.onValidatorChange = fn;
   }
 }

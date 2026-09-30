@@ -118,3 +118,22 @@
   font-size: var(--cw-font-size-sm);
   margin: 0;
 }
+
+.wb-header {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cw-space-3);
+  justify-content: space-between;
+}
+
+.wb-theme {
+  min-width: 12rem;
+}
+
+.wb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cw-space-2);
+  margin-block-start: var(--cw-space-3);
+}

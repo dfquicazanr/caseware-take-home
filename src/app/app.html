@@ -1,8 +1,11 @@
 <header class="wb-header">
-  <h1>Engagement UI kit — workbench</h1>
-  <p class="wb-lede">
-    A consumer of the kit in <code>src/lib</code>. Build, demonstrate and review components here.
-  </p>
+  <div>
+    <h1>Engagement UI kit — workbench</h1>
+    <p class="wb-lede">
+      A consumer of the kit in <code>src/lib</code>. Build, demonstrate and review components here.
+    </p>
+  </div>
+  <cw-select class="wb-theme" label="Theme" [options]="themeOptions" [formControl]="theme" />
 </header>
 
 <main class="wb-main">
@@ -55,12 +58,24 @@
       form-integrated component can be dropped straight in.
     </p>
 
-    <div class="wb-placeholder">
-      <p>No reviewer picker yet.</p>
-      <p class="wb-note">
-        {{ reviewers.length }} reviewers and {{ changeGroups.length }} change groups are available
-        in <code>src/app/data/engagement-fixtures.ts</code>.
-      </p>
+    <cw-select
+      label="Reviewer"
+      placeholder="Any reviewer"
+      [options]="reviewerOptions"
+      [formControl]="reviewerId"
+    />
+
+    <div class="wb-actions">
+      <button type="button" (click)="toggleReviewerDisabled()">
+        {{ reviewerId.disabled ? 'Enable' : 'Disable' }} control
+      </button>
+      <button type="button" (click)="reviewerId.setValue('USR-107')">
+        Set to an unavailable reviewer
+      </button>
+      <button type="button" (click)="reviewerId.setValue('USR-999')">
+        Set to a removed reviewer
+      </button>
+      <button type="button" (click)="reviewerId.reset()">Reset</button>
     </div>
 
     <dl class="wb-state">
@@ -70,6 +85,21 @@
       <dd>{{ reviewerId.touched }}</dd>
       <dt>dirty</dt>
       <dd>{{ reviewerId.dirty }}</dd>
+      <dt>errors</dt>
+      <dd>{{ reviewerId.errors ? (reviewerId.errors | json) : '—' }}</dd>
     </dl>
+  </section>
+
+  <section class="wb-section">
+    <h2>Long list</h2>
+    <p class="wb-note">
+      500 options, every seventh unavailable: for checking scrolling, typeahead and Home/End.
+    </p>
+    <cw-select
+      label="Long list"
+      placeholder="Pick one"
+      [options]="manyOptions"
+      [formControl]="manyValue"
+    />
   </section>
 </main>

@@ -1,12 +1,16 @@
-<span class="label" [id]="id + '-label'">{{ label() }}</span>
+<span class="label" [id]="id + '-label'" (click)="focus()">{{ label() }}</span>
 <div
   #trigger
   class="trigger"
   role="combobox"
-  tabindex="0"
+  [attr.tabindex]="disabled() ? -1 : 0"
+  [attr.aria-disabled]="disabled() ? 'true' : null"
+  [attr.aria-invalid]="unknownValue() ? 'true' : null"
+  [attr.aria-describedby]="unknownValue() ? id + '-error' : null"
   aria-haspopup="listbox"
   [attr.aria-labelledby]="id + '-label'"
   [attr.aria-controls]="id + '-listbox'"
+  [style.anchor-name]="anchorName"
   [attr.aria-expanded]="expanded()"
   [attr.aria-activedescendant]="activeId()"
   (keydown)="onKeydown($event)"
@@ -23,6 +27,7 @@
   tabindex="-1"
   [id]="id + '-listbox'"
   [attr.aria-labelledby]="id + '-label'"
+  [style.position-anchor]="anchorName"
   (mousedown)="$event.preventDefault()"
 >
   @if (expanded()) {
@@ -33,6 +38,7 @@
         [id]="optionId($index)"
         [attr.aria-selected]="option === selected()"
         [attr.aria-disabled]="option.disabled ? 'true' : null"
+        [class.active]="$index === activeIndex()"
         (click)="onOptionClick($index)"
       >
         {{ option.label }}
@@ -40,3 +46,6 @@
     }
   }
 </ul>
+@if (unknownValue()) {
+  <span class="error" [id]="id + '-error'">{{ unknownValueMessage() }}</span>
+}

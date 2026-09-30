@@ -49,10 +49,21 @@ async function setup(initial: string | null = null) {
     return id ? document.getElementById(id) : null;
   };
   const press = async (key: string) => {
-    combobox().dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    combobox().dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+    );
     await fixture.whenStable();
   };
-  return { fixture, root, control: fixture.componentInstance.control, combobox, listbox, options, activeOption, press };
+  return {
+    fixture,
+    root,
+    control: fixture.componentInstance.control,
+    combobox,
+    listbox,
+    options,
+    activeOption,
+    press,
+  };
 }
 
 const nameOf = (el: HTMLElement) =>
@@ -93,7 +104,11 @@ describe('cw-select', () => {
 
       expect(activeOption()?.textContent?.trim()).toBe('Aidan Brennan');
       expect(options().map((o) => o.getAttribute('aria-selected'))).toEqual([
-        'false', 'false', 'true', 'false', 'false',
+        'false',
+        'false',
+        'true',
+        'false',
+        'false',
       ]);
     });
 
@@ -231,11 +246,138 @@ describe('cw-select', () => {
       const { fixture, root, control, combobox, press } = await setup('u1');
       await press('ArrowDown');
 
-      root.querySelector('#before')!.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+      root
+        .querySelector('#before')!
+        .dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
       await fixture.whenStable();
 
       expect(combobox().getAttribute('aria-expanded')).toBe('false');
       expect(control.value).toBe('u1');
+    });
+  });
+  describe('Given a keyboard user typing letters', () => {
+    const label = (el: HTMLElement | null) => el?.textContent?.trim();
+
+    it('when typing while closed, then the list opens on the first match without changing the value', async () => {
+      const { control, combobox, activeOption, press } = await setup('u1');
+
+      await press('s');
+
+      expect(combobox().getAttribute('aria-expanded')).toBe('true');
+      expect(label(activeOption())).toBe('Sofia Marchetti');
+      expect(control.value).toBe('u1');
+    });
+
+    it('when typing a shared prefix, then each further letter narrows the match', async () => {
+      const { activeOption, press } = await setup();
+
+      await press('a');
+      await press('i');
+      expect(label(activeOption())).toBe('Aisha Bello');
+
+      await press('d');
+      expect(label(activeOption())).toBe('Aidan Brennan');
+    });
+
+    it('when typing after a pause, then matching starts again from the new letter', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      try {
+        const { activeOption, press } = await setup();
+        await press('a');
+        await press('i');
+
+        vi.setSystemTime(Date.now() + 1000);
+        await press('c');
+
+        expect(label(activeOption())).toBe('Chen Wei');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('when typing letters that match nothing, then the active option stays put', async () => {
+      const { activeOption, press } = await setup();
+      await press('ArrowDown');
+
+      await press('z');
+
+      expect(label(activeOption())).toBe('Marta Halvorsen');
+    });
+  });
+  describe('Given a form control', () => {
+    it('when the control is disabled, then the combobox is disabled, unfocusable and will not open', async () => {
+      const { fixture, control, combobox, press } = await setup();
+
+      control.disable();
+      await fixture.whenStable();
+      await press('ArrowDown');
+      combobox().click();
+      await fixture.whenStable();
+
+      expect(combobox().getAttribute('aria-disabled')).toBe('true');
+      expect(combobox().getAttribute('tabindex')).toBe('-1');
+      expect(combobox().getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('when the visible label is clicked, then the combobox takes focus', async () => {
+      const { root, combobox } = await setup();
+
+      root.querySelector<HTMLElement>(`#${combobox().getAttribute('aria-labelledby')}`)!.click();
+
+      expect(document.activeElement).toBe(combobox());
+    });
+
+    it('when focus leaves the combobox, then the control is touched but not dirty', async () => {
+      const { fixture, control, combobox } = await setup();
+
+      combobox().focus();
+      combobox().blur();
+      await fixture.whenStable();
+
+      expect(control.touched).toBe(true);
+      expect(control.dirty).toBe(false);
+    });
+
+    it('when the value is set programmatically, then it is shown and the control stays pristine', async () => {
+      const { fixture, control, combobox } = await setup();
+
+      control.setValue('u2');
+      await fixture.whenStable();
+
+      expect(combobox().textContent?.trim()).toBe('Aisha Bello');
+      expect(control.dirty).toBe(false);
+    });
+
+    it('when the value is an unavailable option, then it is shown and the control is valid', async () => {
+      const { control, combobox } = await setup('u4');
+
+      expect(combobox().textContent?.trim()).toBe('Chen Wei');
+      expect(control.valid).toBe(true);
+    });
+  });
+
+  describe('Given a value that matches no option (ADR 0008)', () => {
+    it('then the control is invalid, the value is kept and the error is announced with the combobox', async () => {
+      const { control, combobox } = await setup('u99');
+
+      expect(control.value).toBe('u99');
+      expect(control.errors).toEqual({ cwSelectUnknownValue: { value: 'u99' } });
+      expect(combobox().getAttribute('aria-invalid')).toBe('true');
+      expect(combobox().textContent?.trim()).toBe('Any reviewer');
+      const describedBy = combobox().getAttribute('aria-describedby')!;
+      expect(document.getElementById(describedBy)?.textContent?.trim()).toBe(
+        'The current value is not one of the available options.',
+      );
+    });
+
+    it('when the options change so the value disappears, then the control becomes invalid', async () => {
+      const { fixture, control } = await setup('u5');
+      expect(control.valid).toBe(true);
+
+      fixture.componentInstance.options.set(OPTIONS.slice(0, 4));
+      await fixture.whenStable();
+
+      expect(control.errors).toEqual({ cwSelectUnknownValue: { value: 'u5' } });
     });
   });
 });

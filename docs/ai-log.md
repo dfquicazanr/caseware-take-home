@@ -34,3 +34,10 @@ Running log of what the AI assistant (Claude, in Claude Code) proposed, what I c
 ## 2026-09-30: correction before implementing (ADR 0009)
 
 - The AI's own round-1 keyboard table said arrow keys skip disabled options, and I had accepted it. Before writing the navigation tests, the AI flagged it as wrong: with `aria-activedescendant` only the active option is announced, so skipped options would be invisible to screen reader users, which conflicts with the brief's "conveyed as unavailable". I chose reachable-but-not-choosable.
+
+## 2026-09-30: step 2, cw-select (test-first)
+
+- Built in vertical red/green slices through the consumer seam: 27 tests. Each slice was run red before implementing.
+- **Test-design corrections found during the loop:** jsdom has no `CSS.escape`, `scrollIntoView` or Popover API (guarded, and tests assert state and ARIA instead). Vitest fake timers stall Angular's `whenStable()`, so typeahead expiry uses keystroke timestamps (`Date.now()`) rather than a timer, and the test fakes only `Date`. This also removed a timer from the component.
+- **Verified in a real browser (Chrome 153), by script against the live page:** the popover opens in the top layer, anchored under the trigger; the active option can be the disabled "Chen Wei" and Enter does nothing on it; Escape closes without changing value or dirtiness; "aid" lands on Aidan; theme switching reaches page and components; End on 500 options scrolls the active option into view.
+- **Still to verify by hand (me):** keyboard-only pass, and a screen reader pass (NVDA/Orca) on what is actually announced.

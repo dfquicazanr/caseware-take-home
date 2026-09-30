@@ -1,4 +1,133 @@
+// cw-select consumes semantic tokens only (ADR 0007).
+
 :host {
   display: inline-flex;
   flex-direction: column;
+  gap: var(--cw-space-gap-xs);
+  font-family: var(--cw-font-family);
+  min-width: 16rem;
+}
+
+.label {
+  color: var(--cw-color-text);
+  font-size: var(--cw-font-size-label);
+  font-weight: var(--cw-font-weight-label);
+}
+
+.trigger {
+  align-items: center;
+  background: var(--cw-color-surface-raised);
+  border: var(--cw-border-width-control) solid var(--cw-color-border-control);
+  border-radius: var(--cw-radius-control);
+  color: var(--cw-color-text);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--cw-font-size-body);
+  gap: var(--cw-space-gap-sm);
+  justify-content: space-between;
+  line-height: var(--cw-line-height-body);
+  padding: var(--cw-space-inset-xs) var(--cw-space-inset-md);
+
+  // Chevron drawn with borders: currentColor, so it follows every theme.
+  &::after {
+    border-block-end: 2px solid currentColor;
+    border-inline-end: 2px solid currentColor;
+    content: '';
+    flex: 0 0 auto;
+    height: 0.45em;
+    margin-block-end: 0.2em;
+    rotate: 45deg;
+    width: 0.45em;
+  }
+
+  &:focus-visible {
+    outline: var(--cw-focus-ring-width) solid var(--cw-color-focus-ring);
+    outline-offset: var(--cw-focus-ring-offset);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--cw-color-border-danger);
+  }
+
+  &[aria-disabled='true'] {
+    color: var(--cw-color-text-disabled);
+    cursor: not-allowed;
+  }
+}
+
+.listbox {
+  background: var(--cw-color-surface-raised);
+  border: var(--cw-border-width) solid var(--cw-color-border-control);
+  border-radius: var(--cw-radius-popup);
+  box-shadow: var(--cw-shadow-popup);
+  color: var(--cw-color-text);
+  font-size: var(--cw-font-size-body);
+  list-style: none;
+  max-height: 16rem;
+  overflow-y: auto;
+  padding: var(--cw-space-inset-xs) 0;
+}
+
+// Anchor to the trigger (ADR 0005). Without anchor positioning the popover
+// keeps the browser's default placement, centred in the viewport: usable,
+// just not attached.
+@supports (anchor-name: --a) {
+  .listbox {
+    inset: auto;
+    margin: var(--cw-space-gap-xs) 0 0;
+    min-width: anchor-size(width);
+    position-area: block-end span-inline-end;
+    position-try-fallbacks: flip-block;
+  }
+}
+
+.option {
+  align-items: baseline;
+  cursor: pointer;
+  display: flex;
+  gap: var(--cw-space-gap-sm);
+  padding: var(--cw-space-inset-xs) var(--cw-space-inset-md);
+
+  // Reserve the checkmark column so labels line up.
+  &::before {
+    content: '';
+    flex: 0 0 1em;
+  }
+
+  &.active {
+    background: var(--cw-color-highlight-bg);
+    color: var(--cw-color-highlight-text);
+  }
+
+  // Selected is shown by a mark and weight, not colour alone.
+  &[aria-selected='true'] {
+    font-weight: var(--cw-font-weight-emphasis);
+
+    &::before {
+      content: '✓' / '';
+    }
+  }
+
+  &[aria-disabled='true'] {
+    color: var(--cw-color-text-disabled);
+    cursor: not-allowed;
+  }
+}
+
+.error {
+  color: var(--cw-color-text-danger);
+  font-size: var(--cw-font-size-label);
+}
+
+// Windows forced colours replace backgrounds, so the active option needs an outline.
+@media (forced-colors: active) {
+  .option.active {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .option[aria-disabled='true'],
+  .trigger[aria-disabled='true'] {
+    color: GrayText;
+  }
 }
