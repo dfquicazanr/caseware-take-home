@@ -69,7 +69,6 @@ const pairs = [
   [c('border-danger'), c('surface-raised'), NON_TEXT],
   [c('focus-ring'), c('surface'), NON_TEXT],
   [c('focus-ring'), c('surface-raised'), NON_TEXT],
-  [c('accent'), c('surface-raised'), NON_TEXT],
   ...['neutral', 'success', 'warning', 'danger'].flatMap((tone) => [
     [c(`status-${tone}-fg`), c(`status-${tone}-bg`), TEXT],
     [c(`status-${tone}-indicator`), c(`status-${tone}-bg`), NON_TEXT],

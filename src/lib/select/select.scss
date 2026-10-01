@@ -48,6 +48,11 @@
   &[aria-invalid='true'] {
     border-color: var(--cw-color-border-danger);
   }
+
+  &[aria-disabled='true'] {
+    color: var(--cw-color-text-disabled);
+    cursor: not-allowed;
+  }
 }
 
 .listbox {
