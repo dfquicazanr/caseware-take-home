@@ -29,7 +29,12 @@ I used Claude (in Claude Code) throughout, working in rounds: it proposed each d
 - **Unknown values:** it proposed leaving the value and showing the placeholder. I required the form to be told, so the component is also a validator.
 - **Signal Forms:** I asked for research before accepting `ControlValueAccessor`; the decision rests on the package source (`@experimental` in 21.2.24, `@publicApi` in 22.2.1), not on memory.
 
-**Where the AI corrected itself, or verification caught it:** it reversed its own keyboard proposal (skipping disabled options) before implementation, because skipped options are never announced. The contrast script caught one of its dark-theme colours at 4.34:1.
+**Where the AI corrected itself, or verification caught it:**
+
+- It reversed its own keyboard proposal (skipping disabled options) before implementation, because skipped options are never announced.
+- The contrast script caught one of its dark-theme colours at 4.34:1.
+- Measuring the rendered page in each theme caught a bug that neither the unit tests nor the token check could see: a highlighted option that was also unavailable fell to 2.6:1 in high contrast, because the disabled colour won through CSS source order.
+- A self-review caught a regression from that fix: an edit had removed the trigger's identical disabled styling instead of the option's.
 
 **How I verified:** red/green test runs for every slice; the contrast script; a scripted pass in real Chrome against the running workbench (popover anchoring, Escape, Enter on a disabled option, typeahead, theme switching, 500-option scrolling, badge accessible text and the single deprecation warning); and a manual keyboard-only and screen reader pass. **[TODO Daniel: do this pass and record what the screen reader announced.]**
 
