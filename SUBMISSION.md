@@ -36,7 +36,14 @@ I used Claude (in Claude Code) throughout, working in rounds: it proposed each d
 - Measuring the rendered page in each theme caught a bug that neither the unit tests nor the token check could see: a highlighted option that was also unavailable fell to 2.6:1 in high contrast, because the disabled colour won through CSS source order.
 - A self-review caught a regression from that fix: an edit had removed the trigger's identical disabled styling instead of the option's.
 
-**How I verified:** red/green test runs for every slice; the contrast script; a scripted pass in real Chrome against the running workbench (popover anchoring, Escape, Enter on a disabled option, typeahead, theme switching, 500-option scrolling, badge accessible text and the single deprecation warning); and a manual keyboard-only and screen reader pass. **[TODO Daniel: do this pass and record what the screen reader announced.]**
+**How I verified:** red/green test runs for every slice; the contrast script; a scripted pass in real Chrome against the running workbench (popover anchoring, Escape, Enter on a disabled option, typeahead, theme switching, 500-option scrolling, badge accessible text and the single deprecation warning); and a manual keyboard and screen reader pass with NVDA and Chrome on Windows.
+
+**What the screen reader pass found.** Two required behaviours that every automated check had passed:
+
+- **Opening the list did not announce "expanded",** only the active option. Both changed in the same update and NVDA dropped the state change. The list now exposes "expanded" first and the active option about 50 ms later (ADR 0010); NVDA now announces both.
+- **The badge tooltip was not read at all,** although Chrome's accessibility tree contained it. Bisecting with three temporary variants on the live page showed the cause: the hidden text was absolutely positioned inside a host that also had a `title`. It is now statically positioned (badge width unchanged) and read once.
+
+Everything else was announced as intended: the label and role, unavailable options as unavailable, typeahead, the chosen value, and the removed-reviewer state as "invalid entry" with its message. Not yet tested: VoiceOver with Safari.
 
 ## Time spent
 
