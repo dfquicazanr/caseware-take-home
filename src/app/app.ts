@@ -33,10 +33,14 @@ export class App {
   /** Domain status to kit tone and human label: the consumer's job, not the kit's (ADR 0006). */
   protected readonly statusBadges: Record<
     EngagementStatus,
-    { tone: StatusBadgeTone; label: string }
+    { tone: StatusBadgeTone; label: string; tooltip?: string }
   > = {
     READY: { tone: 'success', label: 'Ready' },
-    PROCESSING: { tone: 'warning', label: 'Processing' },
+    PROCESSING: {
+      tone: 'warning',
+      label: 'Processing',
+      tooltip: 'The server is still preparing this engagement',
+    },
     ERROR: { tone: 'danger', label: 'Error' },
   };
 

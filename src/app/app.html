@@ -51,6 +51,7 @@
           <cw-status-badge
             [tone]="statusBadges[engagement.status].tone"
             [label]="statusBadges[engagement.status].label"
+            [tooltip]="statusBadges[engagement.status].tooltip ?? ''"
           />
         </li>
       }

@@ -49,11 +49,16 @@
   width: 0.6em;
 }
 
+// Hidden but read by screen readers. Deliberately not absolutely positioned:
+// NVDA + Chrome skipped it when it was, because the host also has a `title`
+// (verified by hand; see the AI log). The negative margins cancel the flex gap
+// and the 1px box so the badge's width is unchanged.
 .visually-hidden {
   clip-path: inset(50%);
+  flex: 0 0 1px;
   height: 1px;
+  margin-inline: calc(-1 * var(--cw-space-gap-xs)) -1px;
   overflow: hidden;
-  position: absolute;
   white-space: nowrap;
   width: 1px;
 }
