@@ -50,7 +50,7 @@ Everything else was announced the way I expected: the label and role, unavailabl
 
 ## Time spent
 
-[TIME]
+About 2 hours 10 minutes of hands-on time, over two sessions: about 1 hour 25 minutes for the design rounds and the build, and about 45 minutes for the final code review fixes, my screen reader pass and these notes. That doesn't include breaks, or the time I spent afterwards preparing to talk about it.
 
 ## What I'd do next
 
