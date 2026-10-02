@@ -97,6 +97,22 @@ describe('cw-select', () => {
       expect(activeOption()?.textContent?.trim()).toBe('Marta Halvorsen');
     });
 
+    it('when it opens, then "expanded" is exposed before an option becomes active', async () => {
+      const { fixture, combobox, activeOption } = await setup();
+
+      combobox().dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+      );
+      TestBed.tick();
+
+      // Two separate updates, so NVDA announces "expanded" and then the option.
+      expect(combobox().getAttribute('aria-expanded')).toBe('true');
+      expect(combobox().hasAttribute('aria-activedescendant')).toBe(false);
+
+      await fixture.whenStable();
+      expect(activeOption()?.textContent?.trim()).toBe('Marta Halvorsen');
+    });
+
     it('when it opens with a value, then the selected option is active and marked selected', async () => {
       const { options, activeOption, press } = await setup('u3');
 

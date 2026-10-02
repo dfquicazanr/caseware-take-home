@@ -74,3 +74,8 @@ A second AI agent reviewed the full diff against the starter. It confirmed the a
 - **A test that could not fail:** "focus stays on the combobox after clicking an option" passed even without the mechanism that guarantees it. Added a test on that mechanism (`mousedown` is prevented).
 - **A test of mine that passed for the wrong reason:** the first version of the empty-options test happened to end on End, which hid the bug. Rewritten to assert after every key.
 - **Deliberately not fixed, recorded as next steps:** `aria-invalid` reflects only the select's own unknown-value check, not consumer validators such as `required`; and the badge tooltip may be read twice (hover title plus hidden text), to be checked in the screen reader pass.
+
+## 2026-10-02: my screen reader pass (NVDA + Chrome on Windows)
+
+- **Worked as intended:** the unavailable option is announced as unavailable; typing "aid" lands on Aidan Brennan; choosing announces the value; the removed-reviewer state is announced as "invalid entry" together with the error message.
+- **Failed: opening the list did not announce "expanded",** only the active option. The attribute was correct in the DOM (checked earlier); the cause is that both changes landed in one update and NVDA dropped the state change. The AI proposed exposing "expanded" first and the active option ~50 ms later. Retested with NVDA: "expanded" is now announced (ADR 0010). This was a required behaviour that the unit tests, the scripted browser checks and the code review all passed; only a real screen reader caught it.

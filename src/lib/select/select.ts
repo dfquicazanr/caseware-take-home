@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  PendingTasks,
   afterRenderEffect,
   computed,
   effect,
@@ -33,6 +34,12 @@ let nextId = 0;
 
 /** Keystrokes further apart than this start a new typeahead search. */
 const TYPEAHEAD_RESET_MS = 500;
+
+/**
+ * Gap between exposing "expanded" and the active option when the list opens.
+ * NVDA drops the expanded announcement if both change in one update (ADR 0010).
+ */
+const ANNOUNCE_GAP_MS = 50;
 
 /**
  * Single-select combobox for the kit (APG select-only combobox, ADR 0001).
@@ -89,6 +96,7 @@ export class Select<T> implements ControlValueAccessor, Validator {
   private typeahead = { query: '', at: 0 };
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly pendingTasks = inject(PendingTasks);
   private readonly trigger = viewChild.required<ElementRef<HTMLElement>>('trigger');
   private readonly listbox = viewChild.required<ElementRef<HTMLElement>>('listbox');
 
@@ -281,8 +289,17 @@ export class Select<T> implements ControlValueAccessor, Validator {
     const options = this.options();
     const selectedIndex = options.findIndex((option) => option.value === this.value());
     const fallback = selectedIndex >= 0 ? selectedIndex : options.length ? 0 : -1;
-    this.activeIndex.set(activeIndex ?? fallback);
+    const active = activeIndex ?? fallback;
+    this.activeIndex.set(-1);
     this.expanded.set(true);
+
+    // Expose "expanded" first and the active option in a later update (ADR 0010).
+    // The pending task keeps the app unstable until then, so tests can await it.
+    const done = this.pendingTasks.add();
+    setTimeout(() => {
+      if (this.expanded() && this.activeIndex() < 0) this.activeIndex.set(active);
+      done();
+    }, ANNOUNCE_GAP_MS);
   }
 
   private close(): void {
