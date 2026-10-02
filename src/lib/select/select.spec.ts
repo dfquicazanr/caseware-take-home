@@ -48,9 +48,9 @@ async function setup(initial: string | null = null) {
     const id = combobox().getAttribute('aria-activedescendant');
     return id ? document.getElementById(id) : null;
   };
-  const press = async (key: string) => {
+  const press = async (key: string, init: KeyboardEventInit = {}) => {
     combobox().dispatchEvent(
-      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init }),
     );
     await fixture.whenStable();
   };
@@ -223,6 +223,17 @@ describe('cw-select', () => {
       expect(document.activeElement).toBe(combobox());
     });
 
+    it('when the pointer goes down on an option, then focus is not taken from the combobox', async () => {
+      const { fixture, combobox, options } = await setup();
+      await click(combobox(), fixture);
+
+      const mousedown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+      options()[1].dispatchEvent(mousedown);
+
+      // Browsers move focus on mousedown; preventing it keeps focus on the combobox.
+      expect(mousedown.defaultPrevented).toBe(true);
+    });
+
     it('when an unavailable option is clicked, then nothing is chosen and the list stays open', async () => {
       const { fixture, control, combobox, options } = await setup();
       await click(combobox(), fixture);
@@ -378,6 +389,78 @@ describe('cw-select', () => {
       await fixture.whenStable();
 
       expect(control.errors).toEqual({ cwSelectUnknownValue: { value: 'u5' } });
+    });
+  });
+  describe('Given review findings (regression tests)', () => {
+    const label = (el: HTMLElement | null) => el?.textContent?.trim();
+
+    it('when the value is undefined, then it is treated as empty, not as an unknown value', async () => {
+      const { fixture, control, combobox } = await setup();
+
+      control.setValue(undefined as unknown as null);
+      await fixture.whenStable();
+
+      expect(control.valid).toBe(true);
+      expect(combobox().hasAttribute('aria-invalid')).toBe(false);
+      expect(combobox().textContent?.trim()).toBe('Any reviewer');
+    });
+
+    it('when Escape closes the list, then it does not also reach an enclosing dialog', async () => {
+      const { root, combobox, press } = await setup();
+      const outer: string[] = [];
+      root.addEventListener('keydown', (e) => outer.push((e as KeyboardEvent).key));
+      await press('ArrowDown');
+
+      await press('Escape');
+      expect(outer).toEqual(['ArrowDown']);
+      expect(combobox().getAttribute('aria-expanded')).toBe('false');
+
+      await press('Escape');
+      expect(outer).toEqual(['ArrowDown', 'Escape']);
+    });
+
+    it('when there are no options, then navigation keys never point at a missing option', async () => {
+      const { fixture, combobox, press } = await setup();
+      fixture.componentInstance.options.set([]);
+      await fixture.whenStable();
+
+      await press('ArrowDown');
+      expect(combobox().getAttribute('aria-expanded')).toBe('true');
+
+      for (const key of ['Home', 'ArrowUp', 'End', 'ArrowDown']) {
+        await press(key);
+        expect(combobox().hasAttribute('aria-activedescendant'), key).toBe(false);
+      }
+    });
+
+    it('when typing while closed on a value, then the search starts after the current value', async () => {
+      const { control, activeOption, press } = await setup('u2');
+
+      await press('a');
+
+      expect(label(activeOption())).toBe('Aidan Brennan');
+      expect(control.value).toBe('u2');
+    });
+
+    it('when a character is typed with AltGr, then typeahead still uses it', async () => {
+      const { fixture, activeOption, press } = await setup();
+      fixture.componentInstance.options.set([...OPTIONS, { value: 'u6', label: 'Łukasz Nowak' }]);
+      await fixture.whenStable();
+
+      await press('ł', { ctrlKey: true, altKey: true, modifierAltGraph: true } as KeyboardEventInit);
+
+      expect(label(activeOption())).toBe('Łukasz Nowak');
+    });
+
+    it('when the control is disabled and its label is clicked, then the combobox does not take focus', async () => {
+      const { fixture, root, control, combobox } = await setup();
+      control.disable();
+      await fixture.whenStable();
+
+      root.querySelector<HTMLElement>(`#${combobox().getAttribute('aria-labelledby')}`)!.click();
+
+      expect(document.activeElement).not.toBe(combobox());
+      expect(control.touched).toBe(false);
     });
   });
 });

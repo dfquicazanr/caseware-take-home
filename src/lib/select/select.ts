@@ -133,6 +133,7 @@ export class Select<T> implements ControlValueAccessor, Validator {
 
   /** Moves focus to the combobox, e.g. from its visible label. */
   focus(): void {
+    if (this.disabled()) return;
     this.trigger().nativeElement.focus();
   }
 
@@ -196,6 +197,10 @@ export class Select<T> implements ControlValueAccessor, Validator {
       return;
     }
     const last = this.options().length - 1;
+    if (last < 0 && ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+      event.preventDefault();
+      return;
+    }
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
@@ -219,7 +224,9 @@ export class Select<T> implements ControlValueAccessor, Validator {
         this.choose(this.activeIndex());
         break;
       case 'Escape':
+        // Contained: closing the list must not also close an enclosing dialog.
         event.preventDefault();
+        event.stopPropagation();
         this.close();
         break;
       case 'Tab':
@@ -229,9 +236,13 @@ export class Select<T> implements ControlValueAccessor, Validator {
     }
   }
 
-  /** Printable characters; Space only continues a query already in progress. */
+  /**
+   * Printable characters; Space only continues a query already in progress.
+   * AltGr reports Ctrl+Alt on Windows, so it is let through, not treated as a shortcut.
+   */
   private isTypeaheadKey(event: KeyboardEvent): boolean {
-    if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey) return false;
+    if (event.key.length !== 1 || event.metaKey) return false;
+    if ((event.ctrlKey || event.altKey) && !event.getModifierState('AltGraph')) return false;
     return event.key !== ' ' || this.typeaheadInProgress();
   }
 
@@ -253,7 +264,10 @@ export class Select<T> implements ControlValueAccessor, Validator {
     const repeated = [...query].every((char) => char === query[0]);
     const search = repeated ? query[0] : query;
     const options = this.options();
-    const current = this.activeIndex();
+    // Closed: search from the current value, like a native select.
+    const current = this.expanded()
+      ? this.activeIndex()
+      : options.findIndex((option) => option.value === this.value());
     // A fresh or cycling search starts after the current option; a longer query may still match it.
     const start = current < 0 ? 0 : repeated || query.length === 1 ? current + 1 : current;
     for (let offset = 0; offset < options.length; offset++) {
@@ -291,8 +305,9 @@ export class Select<T> implements ControlValueAccessor, Validator {
   private onTouched: () => void = () => {};
   private onValidatorChange: () => void = () => {};
 
-  writeValue(value: T | null): void {
-    this.value.set(value);
+  writeValue(value: T | null | undefined): void {
+    // Forms can hand over `undefined` (an uninitialised ngModel); it means empty, not unknown.
+    this.value.set(value ?? null);
   }
 
   registerOnChange(fn: (value: T | null) => void): void {
@@ -309,8 +324,8 @@ export class Select<T> implements ControlValueAccessor, Validator {
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
-    const value = control.value as T | null;
-    if (value === null || this.options().some((option) => option.value === value)) return null;
+    const value = control.value as T | null | undefined;
+    if (value == null || this.options().some((option) => option.value === value)) return null;
     return { cwSelectUnknownValue: { value } };
   }
 

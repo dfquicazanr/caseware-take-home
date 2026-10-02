@@ -59,3 +59,18 @@ Running log of what the AI assistant (Claude, in Claude Code) proposed, what I c
 
 - **Regression introduced by the AI's own fix:** when reordering the option's disabled rule, its edit script removed the first matching CSS block, which was the trigger's disabled styling, not the option's. A disabled `cw-select` still behaved correctly (unfocusable, would not open) but no longer looked disabled. Restored. Lesson: a text-matching edit on two identical blocks needed a review of the diff, which is how it was caught.
 - Removed `--cw-color-accent`: defined in all three themes but used by no component, which contradicted the rule that the semantic layer only contains roles components use. The contrast check now covers 22 pairs per theme.
+
+## 2026-10-02: final code review (a separate review agent, read-only)
+
+A second AI agent reviewed the full diff against the starter. It confirmed the anchor-positioning style bindings really apply (Angular routes dashed property names through `style.setProperty`) and that each badge shim renders identically. I triaged its findings:
+
+- **Fixed, test-first:**
+  - `undefined` from a form (for example an uninitialised `ngModel`) was treated as an unknown value and showed the error on an empty field. It is now treated as empty.
+  - Escape closing the list now stops propagating, so it cannot also close an enclosing dialog.
+  - With no options, Home or ArrowUp pointed `aria-activedescendant` at an option that did not exist.
+  - Typeahead while closed now searches from the current value, like a native select.
+  - AltGr characters (Ctrl+Alt on Windows) were dropped from typeahead.
+  - Clicking the label of a disabled select focused it.
+- **A test that could not fail:** "focus stays on the combobox after clicking an option" passed even without the mechanism that guarantees it. Added a test on that mechanism (`mousedown` is prevented).
+- **A test of mine that passed for the wrong reason:** the first version of the empty-options test happened to end on End, which hid the bug. Rewritten to assert after every key.
+- **Deliberately not fixed, recorded as next steps:** `aria-invalid` reflects only the select's own unknown-value check, not consumer validators such as `required`; and the badge tooltip may be read twice (hover title plus hidden text), to be checked in the screen reader pass.

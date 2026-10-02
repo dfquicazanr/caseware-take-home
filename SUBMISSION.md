@@ -5,7 +5,7 @@
 - `cw-select` ([`src/lib/select/`](src/lib/select)): a single-select combobox exported from the kit's public API, used in the workbench as the reviewer picker, the theme switcher and a 500-option list.
 - Semantic token layer and two extra themes, dark and high contrast ([`src/lib/tokens/_semantic.scss`](src/lib/tokens/_semantic.scss)), switchable in the workbench header. Three mid-tone primitives were added for dark-mode indicators, each justified by a measured contrast failure.
 - `cw-status-badge` reworked, with a non-breaking deprecation path.
-- 36 tests (`npm test -- --watch=false`) and a contrast check across all themes (`npm run check:contrast`).
+- 43 tests (`npm test -- --watch=false`) and a contrast check across all themes (`npm run check:contrast`).
 - [DECISIONS.md](DECISIONS.md), [ADOPTION.md](ADOPTION.md), and the full decision record in [`docs/adr/`](docs/adr), plus [GLOSSARY.md](GLOSSARY.md).
 
 ## What I tested and why
@@ -49,6 +49,7 @@ About 1.5 hours of build time with AI assistance, plus the design discussion tha
 3. **An optional option template** for rich content (for example a reviewer's role under their name). It is additive to the current `options` input.
 4. **A real tooltip component** so the badge's explanation reaches keyboard and touch users.
 5. **The `ng update` schematic and lint rule** for the badge migration.
+6. **Reflect every validator in `aria-invalid`.** Today it reflects only the select's own unknown-value check; a consumer's `Validators.required` makes the control invalid without screen readers being told. The fix is to read the bound `NgControl`'s status, and to let consumers pass their own hint or error id for `aria-describedby`.
 
 ## A risk I knowingly left
 
