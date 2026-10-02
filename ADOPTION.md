@@ -8,13 +8,13 @@ Two visible changes ship in that minor and go at the top of the changelog. First
 
 The deprecated inputs are removed in the next **major**. What consuming teams do:
 
-| Before | After |
-| --- | --- |
-| `[isReady]="true"` | `tone="success"` |
-| `[isProcessing]="true"` | `tone="warning"` |
-| `[isError]="true"` | `tone="danger"` |
-| none of the above | `tone="neutral"` (the default) |
-| `[isSmall]="true"` / `[isLarge]="true"` | `size="sm"` / `size="lg"` |
+| Before                                    | After                                           |
+| ----------------------------------------- | ----------------------------------------------- |
+| `[isReady]="true"`                        | `tone="success"`                                |
+| `[isProcessing]="true"`                   | `tone="warning"`                                |
+| `[isError]="true"`                        | `tone="danger"`                                 |
+| none of the above                         | `tone="neutral"` (the default)                  |
+| `[isSmall]="true"` / `[isLarge]="true"`   | `size="sm"` / `size="lg"`                       |
 | `label="READY"` passed straight from data | map your own status to a tone and a human label |
 
 ## Making adoption safe, not merely possible
@@ -29,7 +29,7 @@ The deprecated inputs are removed in the next **major**. What consuming teams do
 What I would expect to go wrong, and how this design affects it:
 
 - **Duplicate element IDs. This design makes it worse today.** `cw-select` builds its IDs from a module-level counter (`cw-select-0`, `cw-select-1`…). Two copies of the kit each start at 0, so two selects on the same page can share an ID, and `aria-labelledby`, `aria-controls` and `aria-activedescendant` would point at the wrong element. That is an accessibility failure with no visual symptom. Fix: prefix IDs with a per-bundle random or version-derived token, or use a shared ID service provided by the host.
-- **Token collisions. Mostly contained, with one weakness.** Both versions write the same `--cw-*` custom properties to `:root`, and the last stylesheet loaded wins for both. Because components consume only semantic tokens, a collision only matters where the two versions disagree on a token's *meaning*. A token renamed or removed between versions would break the older copy silently. The mitigation is to treat semantic token names as public API under the same semver rules as inputs, which the small token set makes practical. Namespacing tokens per major (`--cw2-*`) is the stronger option if versions must coexist for long.
+- **Token collisions. Mostly contained, with one weakness.** Both versions write the same `--cw-*` custom properties to `:root`, and the last stylesheet loaded wins for both. Because components consume only semantic tokens, a collision only matters where the two versions disagree on a token's _meaning_. A token renamed or removed between versions would break the older copy silently. The mitigation is to treat semantic token names as public API under the same semver rules as inputs, which the small token set makes practical. Namespacing tokens per major (`--cw2-*`) is the stronger option if versions must coexist for long.
 - **Theme attribute. This design helps.** `data-cw-theme` is plain markup that both versions read, so a theme switch reaches both copies, as long as both define the same theme names.
 - **Component selectors.** Angular components are compiled into each remote, so two `cw-select` definitions coexist without the registration clash custom elements would have. Each copy styles only its own instances, because styles are emulated-encapsulated per build.
 - **Deprecation warnings** are de-duplicated per application injector, so a federated page may show one warning per remote. That is noisy but harmless.

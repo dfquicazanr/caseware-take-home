@@ -34,4 +34,4 @@ The listbox renders in the top layer (`popover="manual"`) and is placed with CSS
 
 - The kit stays on Angular 21 (the starter's version); consumer teams are not all ready for 22.
 - Supported browsers are those with CSS anchor positioning (Chrome/Edge 125, Safari 26, Firefox 147). Older browsers still get a working list, shown in the popover's default centred position rather than under the trigger.
-- Announcing status *changes* (for example a live region when an engagement becomes Ready) is the consuming screen's job, not the badge's: only the screen knows which changes matter, and 50 badges refreshing at once must not produce 50 announcements.
+- Announcing status _changes_ (for example a live region when an engagement becomes Ready) is the consuming screen's job, not the badge's: only the screen knows which changes matter, and 50 badges refreshing at once must not produce 50 announcements.

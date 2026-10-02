@@ -53,4 +53,4 @@ About 1.5 hours of build time with AI assistance, plus the design discussion tha
 
 ## A risk I knowingly left
 
-**Options changing while the list is open.** If the `options` input shrinks while the listbox is open (for example live data removes a reviewer), the active index is not re-clamped, so `aria-activedescendant` can briefly point at an option that no longer exists until the user presses a key. The next test I would write: *given an open list with the last option active, when the options input loses its last item, then `aria-activedescendant` references an existing option and Enter does not choose anything that is gone.*
+**Options changing while the list is open.** If the `options` input shrinks while the listbox is open (for example live data removes a reviewer), the active index is not re-clamped, so `aria-activedescendant` can briefly point at an option that no longer exists until the user presses a key. The next test I would write: _given an open list with the last option active, when the options input loses its last item, then `aria-activedescendant` references an existing option and Enter does not choose anything that is gone._

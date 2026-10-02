@@ -447,7 +447,11 @@ describe('cw-select', () => {
       fixture.componentInstance.options.set([...OPTIONS, { value: 'u6', label: 'Łukasz Nowak' }]);
       await fixture.whenStable();
 
-      await press('ł', { ctrlKey: true, altKey: true, modifierAltGraph: true } as KeyboardEventInit);
+      await press('ł', {
+        ctrlKey: true,
+        altKey: true,
+        modifierAltGraph: true,
+      } as KeyboardEventInit);
 
       expect(label(activeOption())).toBe('Łukasz Nowak');
     });
