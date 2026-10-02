@@ -14,7 +14,8 @@ function declarations(source, selectorPattern) {
   const vars = {};
   for (const [, selector, body] of source.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     if (!selectorPattern.test(selector)) continue;
-    for (const [, name, value] of body.matchAll(/(--cw-[\w-]+):\s*([^;]+);/g)) vars[name] = value.trim();
+    for (const [, name, value] of body.matchAll(/(--cw-[\w-]+):\s*([^;]+);/g))
+      vars[name] = value.trim();
   }
   return vars;
 }
@@ -35,7 +36,8 @@ function resolve(name, vars) {
     const ref = value.slice(4, -1).trim();
     value = vars[ref] ?? primitives[ref];
   }
-  if (!value?.startsWith('#')) throw new Error(`${name} does not resolve to a hex colour (got ${value})`);
+  if (!value?.startsWith('#'))
+    throw new Error(`${name} does not resolve to a hex colour (got ${value})`);
   return value;
 }
 
@@ -82,7 +84,9 @@ for (const [theme, vars] of Object.entries(themes)) {
     const value = ratio(resolve(fg, vars), resolve(bg, vars));
     const ok = value >= min;
     if (!ok) failures++;
-    console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${value.toFixed(2).padStart(5)} >= ${min}  ${fg} on ${bg}`);
+    console.log(
+      `  ${ok ? 'ok  ' : 'FAIL'} ${value.toFixed(2).padStart(5)} >= ${min}  ${fg} on ${bg}`,
+    );
   }
 }
 console.log(failures ? `\n${failures} pair(s) below the WCAG minimum.` : '\nAll pairs pass.');
